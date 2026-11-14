@@ -1,4 +1,5 @@
 import importlib.util
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 from tempfile import TemporaryDirectory
@@ -13,9 +14,12 @@ class InspectionTests(unittest.TestCase):
     def test_database_remains_identical_and_export_is_bounded(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / 'source.db'
-            with sqlite3.connect(path) as db:
-                db.execute('CREATE TABLE "odd""name" (id INTEGER, demand REAL)')
-                db.executemany('INSERT INTO "odd""name" VALUES (?, ?)', [(1, 1.), (2, 2.)])
+            # A sqlite3 transaction context commits but does not close its file.
+            # Close the fixture explicitly so Windows can remove the temp directory.
+            with closing(sqlite3.connect(path)) as db:
+                with db:
+                    db.execute('CREATE TABLE "odd""name" (id INTEGER, demand REAL)')
+                    db.executemany('INSERT INTO "odd""name" VALUES (?, ?)', [(1, 1.), (2, 2.)])
             before = path.read_bytes()
             self.assertEqual(module.inspect_database(path)['odd"name']['rows'], 2)
             output = Path(directory) / 'sample.csv'
@@ -42,3 +46,4 @@ class InspectionTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
