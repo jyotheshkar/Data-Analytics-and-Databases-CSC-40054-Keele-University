@@ -1,0 +1,51 @@
+{
+  "module_code": "CSC-40054",
+  "academic_year": "2023/24",
+  "project_year": 2024,
+  "maintenance_date": "2026-11-14",
+  "module_mark": 89,
+  "credits_cats": 15,
+  "mark_evidence": "Private official transcript visually verified, issued 15 January 2025; not uploaded. Overall module mark, not a component mark or model score.",
+  "official_module_url": "https://www.keele.ac.uk/catalogue/2023-24/csc-40054.htm",
+  "official_documents": [
+    {
+      "classification": "university_assessment_brief",
+      "public_path": "docs/original/CSC-40054-Assessment-Brief-Coursework-2.pdf",
+      "sha256": "9a69c6bf00ffaea115c2ac2a829d5d49ca36135f79a52512d1b02b5ca9668dee",
+      "unchanged": true
+    },
+    {
+      "classification": "university_assessment_brief",
+      "public_path": "docs/original/CSC-40054-Assessment-Open-Book-Exam-V3.pdf",
+      "sha256": "8e3cd34d07f5e41146f52df5b91c828dc81f5099614d430e745112fb89a86789",
+      "unchanged": true
+    }
+  ],
+  "student_documents": [
+    {
+      "classification": "student_submission_private_source",
+      "source_description": "individual coursework report DOCX",
+      "source_sha256": "6bba6ff88b20c40932ff7e4d3e09570f2dc470ca373ad7852b16541819ac6b3b",
+      "public_derivative": "docs/original/student-report-technical-text.md",
+      "derivative_sha256": "5b17a1f6490ff84f0476d746c36e2a2271fd916176afb3110ff426e9ab9661eb",
+      "complete_submission": false,
+      "exclusions": [
+        "cover",
+        "student identifiers",
+        "source document metadata",
+        "all embedded images"
+      ],
+      "derivative_created": "2026-11-14"
+    }
+  ],
+  "history_limit": "Redacted derivatives do not remove unredacted versions from Git history. Original-work import bytes remain untouched.",
+  "database": {
+    "path": "CarSharing.db",
+    "sha256": "fb135952ce82f36ab51f414f815d226e8129a8feab594ffef4abc0fc565b2401",
+    "git_blob_sha": "60d0ea5fbce8bd17a78701e10d472509bcff608a",
+    "tables": 14,
+    "backup_table": "CarSharingBackup",
+    "backup_rows": 8708,
+    "external_dataset_licence": "unverified; no new KLE source CSV redistribution"
+  }
+}

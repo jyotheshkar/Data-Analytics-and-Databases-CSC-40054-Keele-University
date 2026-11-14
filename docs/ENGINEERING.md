@@ -1,71 +1,48 @@
-# Engineering review — Data Analytics and Databases
+# Engineering and reproducibility runbook
 
-Review date: 14 November 2026. This document records the current portfolio edition and proposed engineering improvements separately from the assessed academic work.
+## Architecture in the repository
 
-## Original system
-
-Turn a car-sharing dataset into a relational database, then explore demand through SQL, preprocessing and predictive analytics. The original delivery is **Python notebooks + SQLite**. Existing source files, desktop interfaces and relational/data schemas remain authoritative for reproducing the historical implementation.
+The original notebook is a sequential local database workflow, not a web service. It imports course data, mutates SQLite tables and stores derived summaries. The analytics notebook reads a CSV and successively writes its preprocessed CSV. Saved notebook outputs and the database are historical artefacts. The 2026 inspector provides a separate standard-library read path that leaves the supplied database unchanged.
 
 ```mermaid
 flowchart TD
-  N0["CSV source data"]
-  N1["Typed cleaning and validation"]
-  N2["SQLite tables and queries"]
-  N3["Notebooks and model experiments"]
-  N0 --> N1
-  N1 --> N2
-  N2 --> N3
+    Input["Course CSV input"] --> SQL["Database notebook"]
+    SQL --> DB["SQLite snapshot"]
+    Input --> Analytics["Analytics notebook"]
+    Analytics --> Output["Plots and historical scores"]
+    DB --> Inspector["Read-only inspector"]
+    Inspector --> Export["Bounded CSV export"]
 ```
 
-## Decision 1: Preserve provenance
+## Safe run sequence
 
-Keep the assessed source and any group contribution boundaries intact. Add a browser workbench and engineering explanation as a later portfolio edition. Do not relabel the new edition with the original module mark or overwrite the academic evidence. Tradeoff: two surfaces require explicit documentation, but reviewers can distinguish reproducible source from demonstrations.
+1. Keep the downloaded archive unchanged and create a separate working copy.
+2. Run `python scripts/inspect_database.py` first. It reports actual table names, row counts and columns without writing to SQLite.
+3. If source CSV access is unavailable, use `--table CarSharingBackup --output CarSharing-extract.csv --limit 10000` to reconstruct rows from the committed backup. Label it as a reconstruction.
+4. Open notebooks in the working copy with Jupyter. Replace the historical absolute input path with your reconstructed CSV path or a legitimate copy of the original course data.
+5. Execute cells in order. The database notebook drops/recreates tables and the analytics notebook repeatedly overwrites `CarSharingDataAnalytics.csv`; rerunning isolated cells can use stale state or duplicate transformations.
+6. Keep generated outputs outside the evidence archive and record input hashes, package versions and executed cells when publishing new results.
 
-## Decision 2: Make the boundary explicit
+The original KLE CSV has been located privately, but its licence is not verified. It is not added as a new public dataset. Do not describe a reconstruction as an original download or broaden third-party data permissions.
 
-Preserve the original SQLite file and inspect it read-only. Write derived datasets and exports to separate files so a reproducible analysis cannot silently overwrite its source.
+## Dependencies and compatibility
 
-SQLite offers a portable, inspectable coursework database with no server to operate. Multiple concurrent writers or hosted APIs would require a separate operational database and migration strategy.
+The safe inspector needs only Python 3.12's standard library. Notebook browsing and the database notebook require Jupyter and pandas. Full analytics also imports NumPy, scikit-learn, statsmodels, seaborn, matplotlib, pmdarima and TensorFlow. The original environment was not locked, and the full combination has not been recreated here. Use a separate environment and compatible releases for your platform; pmdarima/NumPy and TensorFlow/Python binary compatibility need particular attention. Do not install a large ML stack merely to inspect the SQLite snapshot.
 
-## Data and interface contracts
+## Data integrity and SQL boundaries
 
-Make timestamps, demand units, temperature categories and missing-value rules explicit. Validate join keys and row counts. Evaluate forecasting chronologically and compare with a simple seasonal baseline.
+`connect_readonly()` resolves an existing path strictly and opens a `mode=ro` SQLite URI. A missing path raises an error instead of silently creating an empty database. Table exports accept only names from the actual schema, quote identifiers, bind the limit and create output files exclusively. Limits are between 1 and 100,000 rows. Neither the inspector nor the tests migrate or rebuild the coursework database.
 
-The browser workbench filters eight invented rows and reports their arithmetic mean. It is a transparent SQL-style illustration, not a query against the repository database or evidence of forecast accuracy.
+The notebook's temperature extraction lacks a stable row key in the derived table, so do not assume it is a general-purpose normalised production schema. Saved summary tables may reflect the historical execution order. Recompute a result from the backup in a working database before treating it as current analytics.
 
-## Current web architecture
+## Verification performed on 14 November 2026
 
-The web edition is buildless HTML, CSS and JavaScript. It loads a fixed, synthetic example where needed and performs bounded calculations in the browser. User-entered strings are rendered through text nodes; no submitted value is evaluated as source code. It has no analytics, external API calls, database writes or credential requirement. Input state lasts only for the current page session.
+The existing two inspector regressions passed with Python 3.11 on Windows. They cover quoted identifiers, bounded exports, exclusive output creation, rejection of unknown tables, SQL write rejection, byte-preserving inspection and missing-file behaviour. A temporary-database fixture originally left its transaction context's connection open; explicitly closing it fixes Windows cleanup without changing production behaviour.
 
-```mermaid
-flowchart TD
-  A["Visitor browser"] --> B["Static HTML and styles"]
-  B --> C["Validated local input"]
-  C --> D["Deterministic demonstration"]
-  D --> E["Result and explicit limitations"]
-  B --> F["Original source and evidence links"]
-```
+The actual database matched the committed Git blob and was inspected read-only: 14 tables, 8,708 rows in both the working and backup demand tables. Its SHA-256 remained `fb135952ce82f36ab51f414f815d226e8129a8feab594ffef4abc0fc565b2401`. Notebook JSON and Python code-cell syntax were checked separately. Full notebook execution, TensorFlow training and any new accuracy comparison were not performed.
 
-## Deployment architecture
+## Future changes and recovery
 
-Local preview uses a static HTTP server. The intended Sites deployment serves the same `web/index.html` and associated assets. As of this review, Sites publication is pending; the source repository link is not a deployment receipt. A Python/PHP/desktop runtime is not silently hosted by deploying this static page.
+For a maintained analytics package, separate source loading, schema validation, transformations and evaluation rather than relying on cell order. Retain an immutable raw snapshot and key joins explicitly. Fit preprocessing inside the training fold, use chronological evaluation and state target units in reports. SQLite is adequate for this coursework size; introduce a database service only for measured concurrency or operational requirements.
 
-A future hosted original application needs a separately described service boundary: authenticated request handling; schema validation; configuration and secret management; bounded workloads; persistent storage ownership; structured errors; audit-safe logs; backup/restore; deployment rollback; and explicit operational responsibility. For training jobs, use a queue and durable job status rather than keeping an HTTP request open. These are proposed requirements, not implemented services.
-
-## Verification strategy
-
-1. Review links and academic figures against the verified module map.
-2. Validate browser inputs at their boundary: blanks, malformed values, out-of-range numbers and non-finite values.
-3. Compare numerical examples against independent known answers; keep labels clear about synthetic data.
-4. Check keyboard navigation, visible focus, readable contrast and small-screen layout.
-5. Run the original repository’s documented checks separately. A successful browser demonstration does not prove that the historical GUI, hardware integration or modelling environment starts successfully.
-
-The edition uses semantic headings, labelled form controls, a live result region, responsive layout and reduced-motion support. Browser execution and original-application checks must be reported only when actually completed.
-
-## Operations and failure handling
-
-Keep real datasets, academic identifiers, access tokens and session exports outside the published source. A malformed workbench input produces an explanatory local error. The demo state can be reset by reloading. Static deployment rollback should restore a previously saved, verified version. Before deploying an original backend, define recovery objectives based on the actual users and data rather than inventing uptime guarantees.
-
-## Known limitations
-
-The browser workbench filters eight invented rows and reports their arithmetic mean. It is a transparent SQL-style illustration, not a query against the repository database or evidence of forecast accuracy. Missing university-issued documents remain marked missing. No unavailable assessment component marks, model scores, benchmarks or production claims have been inferred from the final module result.
+Rollback code with a normal Git revert. Restore data from an independent copy because reverting code does not undo notebook mutations. Preserve migration manifests and imported snapshots byte-for-byte. Record privacy-reviewed evidence hashes in `docs/original/PROVENANCE.json`; head-file removal does not erase prior Git versions.
